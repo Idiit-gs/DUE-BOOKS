@@ -1,0 +1,139 @@
+@import "tailwindcss";
+
+:root {
+  --brand-primary: #059669;
+  --brand-primary-rgb: 5, 150, 105;
+  --brand-primary-hover: #047857;
+  --brand-primary-active: #065f46;
+  --brand-primary-light: rgba(5, 150, 105, 0.08);
+  --brand-primary-border: rgba(5, 150, 105, 0.25);
+  --brand-primary-border-strong: rgba(5, 150, 105, 0.6);
+}
+
+.brand-btn-primary {
+  background-color: var(--brand-primary);
+  color: #ffffff;
+  transition: all 0.15s ease-in-out;
+}
+
+.brand-btn-primary:hover:not(:disabled) {
+  background-color: var(--brand-primary-hover);
+}
+
+.brand-btn-primary:active:not(:disabled) {
+  background-color: var(--brand-primary-active);
+}
+
+.brand-btn-secondary {
+  background-color: var(--brand-primary-light);
+  color: var(--brand-primary);
+  border: 1px solid var(--brand-primary-border);
+  transition: all 0.15s ease-in-out;
+}
+
+.brand-btn-secondary:hover:not(:disabled) {
+  background-color: rgba(var(--brand-primary-rgb), 0.15);
+  border-color: var(--brand-primary-border-strong);
+}
+
+.brand-text {
+  color: var(--brand-primary);
+}
+
+.brand-bg {
+  background-color: var(--brand-primary);
+}
+
+.brand-bg-light {
+  background-color: var(--brand-primary-light);
+}
+
+.brand-border {
+  border-color: var(--brand-primary);
+}
+
+.brand-border-light {
+  border-color: var(--brand-primary-border);
+}
+
+.brand-nav-active {
+  background-color: var(--brand-primary-light) !important;
+  color: var(--brand-primary) !important;
+  border-color: var(--brand-primary-border-strong) !important;
+}
+
+@layer utilities {
+  /* Print Optimization */
+  @media print {
+    @page {
+      size: A4 portrait;
+      margin: 12mm 12mm 15mm 12mm;
+    }
+
+    *, ::before, ::after {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+      box-shadow: none !important;
+      text-shadow: none !important;
+    }
+
+    html, body {
+      background: #ffffff !important;
+      color: #0f172a !important;
+      font-size: 11pt !important;
+      overflow: visible !important;
+      height: auto !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+
+    /* Hide background interface when printing modal */
+    nav, header, footer, .print\:hidden, [role="tooltip"] {
+      display: none !important;
+    }
+
+    /* Modal reset for print */
+    .fixed.inset-0 {
+      position: static !important;
+      background: transparent !important;
+      backdrop-filter: none !important;
+      padding: 0 !important;
+      overflow: visible !important;
+      display: block !important;
+      z-index: auto !important;
+    }
+
+    .fixed.inset-0 > div {
+      box-shadow: none !important;
+      border: none !important;
+      margin: 0 !important;
+      max-width: 100% !important;
+      width: 100% !important;
+      overflow: visible !important;
+    }
+
+    #printable-receipt,
+    #printable-statement,
+    #printable-report {
+      display: block !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      margin: 0 auto !important;
+      padding: 0 !important;
+      background: #ffffff !important;
+      color: #0f172a !important;
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+
+    table {
+      page-break-inside: auto;
+    }
+
+    tr {
+      page-break-inside: avoid;
+      page-break-after: auto;
+    }
+  }
+}
+

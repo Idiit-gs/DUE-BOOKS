@@ -1,0 +1,144 @@
+{
+  "entities": {
+    "User": {
+      "collection": "users",
+      "fields": {
+        "id": { "type": "string", "description": "Auth UID" },
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "currentOrgId": { "type": "string", "optional": true },
+        "createdAt": { "type": "string" }
+      }
+    },
+    "Organization": {
+      "collection": "organizations",
+      "fields": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "motto": { "type": "string", "optional": true },
+        "type": { "type": "string" },
+        "currency": { "type": "string" },
+        "currencySymbol": { "type": "string" },
+        "code": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "bankAccounts": { "type": "array" },
+        "custodians": { "type": "array" },
+        "ownerUid": { "type": "string", "optional": true }
+      }
+    },
+    "OrgMembership": {
+      "collection": "org_memberships",
+      "fields": {
+        "id": { "type": "string" },
+        "orgId": { "type": "string" },
+        "userEmail": { "type": "string" },
+        "userName": { "type": "string" },
+        "role": { "type": "string" },
+        "status": { "type": "string" },
+        "addedAt": { "type": "string" }
+      }
+    },
+    "Member": {
+      "collection": "members",
+      "fields": {
+        "id": { "type": "string" },
+        "orgId": { "type": "string" },
+        "memberNumber": { "type": "string" },
+        "fullName": { "type": "string" },
+        "phone": { "type": "string" },
+        "email": { "type": "string", "optional": true },
+        "joinDate": { "type": "string" },
+        "category": { "type": "string" },
+        "status": { "type": "string" },
+        "expectedBalance": { "type": "number" },
+        "paidBalance": { "type": "number" },
+        "unallocatedCredit": { "type": "number" },
+        "notes": { "type": "string", "optional": true },
+        "createdAt": { "type": "string" }
+      }
+    },
+    "Contribution": {
+      "collection": "contributions",
+      "fields": {
+        "id": { "type": "string" },
+        "orgId": { "type": "string" },
+        "name": { "type": "string" },
+        "type": { "type": "string" },
+        "amount": { "type": "number" },
+        "frequency": { "type": "string" },
+        "dueDate": { "type": "string", "optional": true },
+        "description": { "type": "string", "optional": true },
+        "status": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "targetType": { "type": "string", "optional": true },
+        "targetCategories": { "type": "array", "optional": true },
+        "targetMemberIds": { "type": "array", "optional": true }
+      }
+    },
+    "Payment": {
+      "collection": "payments",
+      "fields": {
+        "id": { "type": "string" },
+        "orgId": { "type": "string" },
+        "receiptNumber": { "type": "string" },
+        "memberId": { "type": "string" },
+        "memberName": { "type": "string" },
+        "memberNumber": { "type": "string" },
+        "amount": { "type": "number" },
+        "method": { "type": "string" },
+        "paymentDate": { "type": "string" },
+        "recordedAt": { "type": "string" },
+        "recordedByEmail": { "type": "string" },
+        "recordedByName": { "type": "string" },
+        "referenceNote": { "type": "string", "optional": true },
+        "channelDetails": { "type": "string", "optional": true },
+        "status": { "type": "string" },
+        "allocations": { "type": "array" },
+        "unallocatedCredit": { "type": "number" },
+        "balanceBefore": { "type": "number" },
+        "balanceAfter": { "type": "number" },
+        "reversalReason": { "type": "string", "optional": true },
+        "reversedByEmail": { "type": "string", "optional": true },
+        "reversedByName": { "type": "string", "optional": true },
+        "reversedAt": { "type": "string", "optional": true }
+      }
+    },
+    "Expense": {
+      "collection": "expenses",
+      "fields": {
+        "id": { "type": "string" },
+        "orgId": { "type": "string" },
+        "title": { "type": "string" },
+        "category": { "type": "string" },
+        "amount": { "type": "number" },
+        "date": { "type": "string" },
+        "paidTo": { "type": "string" },
+        "paidFromType": { "type": "string" },
+        "custodianOrBankId": { "type": "string" },
+        "custodianOrBankName": { "type": "string" },
+        "approvedBy": { "type": "string" },
+        "recordedByEmail": { "type": "string" },
+        "recordedByName": { "type": "string" },
+        "receiptRef": { "type": "string", "optional": true },
+        "description": { "type": "string", "optional": true },
+        "createdAt": { "type": "string" }
+      }
+    },
+    "AuditEvent": {
+      "collection": "audit_events",
+      "fields": {
+        "id": { "type": "string" },
+        "orgId": { "type": "string" },
+        "actorEmail": { "type": "string" },
+        "actorName": { "type": "string" },
+        "actorRole": { "type": "string" },
+        "action": { "type": "string" },
+        "entityType": { "type": "string" },
+        "entityId": { "type": "string" },
+        "summary": { "type": "string" },
+        "payload": { "type": "map", "optional": true },
+        "timestamp": { "type": "string" }
+      }
+    }
+  }
+}

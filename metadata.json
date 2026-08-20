@@ -1,0 +1,8 @@
+{
+  "name": "Dues Books",
+  "description": "A trustworthy digital record book for associations, clubs, alumni groups, churches, and communities with role-based access, traceable receipts, reversals, treasury, and audit history.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
