@@ -84,6 +84,8 @@ interface DuesBookContextType {
     motto?: string;
     currency?: string;
     code?: string;
+    bankName?: string;
+    accountNumber?: string;
   }) => Organization;
   updateOrganization: (id: string, data: Partial<Organization>) => void;
   deleteOrganization: (id: string) => Promise<{ success: boolean; message: string }>;
@@ -521,6 +523,8 @@ export const DuesBookProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     motto?: string;
     currency?: string;
     code?: string;
+    bankName?: string;
+    accountNumber?: string;
   }): Organization => {
     const newOrgId = `org_${Date.now()}`;
     const code = data.code || data.name.substring(0, 4).toUpperCase();
@@ -539,8 +543,8 @@ export const DuesBookProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       bankAccounts: [
         {
           id: `bank_${Date.now()}`,
-          bankName: 'First Bank of Nigeria',
-          accountNumber: '3001234567',
+          bankName: data.bankName || 'First Bank of Nigeria',
+          accountNumber: data.accountNumber || '3001234567',
           accountName: `${data.name} Main Account`,
           initialBalance: 0,
         },

@@ -34,6 +34,8 @@ export const OnboardingOrgScreen: React.FC<OnboardingOrgScreenProps> = ({ onComp
         motto: motto.trim() || 'Every naira has a history.',
         code: code.trim().toUpperCase() || undefined,
         currency: 'NGN',
+        bankName: bankName.trim() || undefined,
+        accountNumber: accountNumber.trim() || undefined,
       });
       if (onCompleted) {
         onCompleted();
