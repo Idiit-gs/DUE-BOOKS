@@ -4,9 +4,10 @@ import {
   createUserWithEmailAndPassword,
   signInWithPopup,
   updateProfile,
+  sendPasswordResetEmail,
 } from 'firebase/auth';
 import { auth, googleProvider } from '../lib/firebase';
-import { Receipt, Shield, Lock, Mail, User, ArrowRight, Sparkles, Building2, CheckCircle2 } from 'lucide-react';
+import { Receipt, Shield, Lock, Mail, User, ArrowRight, Sparkles, Building2, CheckCircle2, KeyRound } from 'lucide-react';
 
 interface AuthScreenProps {
   onSuccess?: () => void;
@@ -20,6 +21,29 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onDemoSignIn }) => {
   const [fullName, setFullName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [resetMessage, setResetMessage] = useState<string | null>(null);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!resetEmail.trim()) {
+      setError('Please enter your email to receive a password reset link.');
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    try {
+      await sendPasswordResetEmail(auth, resetEmail.trim());
+      setResetMessage(`Password reset link sent to ${resetEmail.trim()}. Check your inbox.`);
+      setShowForgotPassword(false);
+    } catch (err: any) {
+      console.error('Password reset error:', err);
+      setError(err.message || 'Could not send password reset email.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -161,6 +185,13 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onDemoSignIn }) => {
             </button>
           </div>
 
+          {resetMessage && (
+            <div className="mb-5 p-3 rounded-lg bg-emerald-950/60 border border-emerald-700 text-emerald-200 text-xs flex items-start space-x-2">
+              <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+              <span>{resetMessage}</span>
+            </div>
+          )}
+
           {error && (
             <div className="mb-5 p-3 rounded-lg bg-rose-950/60 border border-rose-800 text-rose-200 text-xs flex items-start space-x-2">
               <span className="font-bold text-rose-400">!</span>
@@ -206,9 +237,24 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onDemoSignIn }) => {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">
-                Password
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-xs font-semibold text-slate-300">
+                  Password
+                </label>
+                {!isSignUp && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setResetEmail(email);
+                      setShowForgotPassword(true);
+                      setError(null);
+                    }}
+                    className="text-[11px] text-emerald-400 hover:text-emerald-300 font-medium cursor-pointer"
+                  >
+                    Forgot Password?
+                  </button>
+                )}
+              </div>
               <div className="relative">
                 <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
                 <input
@@ -304,6 +350,50 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onDemoSignIn }) => {
           </div>
         </div>
       </div>
+
+      {/* Forgot Password Modal */}
+      {showForgotPassword && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-xs">
+          <div className="bg-slate-900 border border-slate-700 w-full max-w-sm rounded-2xl p-6 shadow-2xl space-y-4 animate-in zoom-in-95 duration-150">
+            <div className="flex items-center space-x-2 text-emerald-400">
+              <KeyRound className="w-5 h-5" />
+              <h3 className="font-bold text-sm text-white">Reset Account Password</h3>
+            </div>
+            <p className="text-xs text-slate-300">
+              Enter your registered email address. We will send you an official password reset link.
+            </p>
+            <form onSubmit={handleResetPassword} className="space-y-3">
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-400 mb-1">Email</label>
+                <input
+                  type="email"
+                  required
+                  value={resetEmail}
+                  onChange={(e) => setResetEmail(e.target.value)}
+                  placeholder="e.g., peter.orazulike@gmail.com"
+                  className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-xs text-white placeholder:text-slate-500 focus:ring-2 focus:ring-emerald-500 outline-none"
+                />
+              </div>
+              <div className="flex items-center justify-end space-x-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowForgotPassword(false)}
+                  className="px-3 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow disabled:opacity-50"
+                >
+                  {loading ? 'Sending...' : 'Send Reset Link'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

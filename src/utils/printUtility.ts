@@ -41,7 +41,7 @@ export function printDocumentElement(elementId: string, title: string = 'Dues Bo
       <style>
         @page {
           size: A4 portrait;
-          margin: 12mm 12mm 15mm 12mm;
+          margin: 10mm 12mm 12mm 12mm;
         }
         * {
           -webkit-print-color-adjust: exact !important;
@@ -53,12 +53,18 @@ export function printDocumentElement(elementId: string, title: string = 'Dues Bo
           color: #0f172a !important;
           font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
           margin: 0 !important;
-          padding: 10px !important;
-          font-size: 11pt !important;
-          line-height: 1.4 !important;
+          padding: 8px !important;
+          font-size: 10pt !important;
+          line-height: 1.35 !important;
         }
-        .print\\:hidden, button, [role="tooltip"], nav, header, footer {
+        .print\\:hidden, button, [role="tooltip"] {
           display: none !important;
+        }
+        img {
+          max-width: 100% !important;
+          height: auto !important;
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
         }
         table {
           width: 100% !important;
@@ -66,7 +72,7 @@ export function printDocumentElement(elementId: string, title: string = 'Dues Bo
         }
         th, td {
           border-bottom: 1px solid #e2e8f0 !important;
-          padding: 6px 8px !important;
+          padding: 5px 7px !important;
         }
         .break-inside-avoid {
           break-inside: avoid !important;

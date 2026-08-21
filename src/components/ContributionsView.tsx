@@ -11,6 +11,10 @@ import {
   isObligationApplicableToMember,
 } from '../utils/financial';
 import {
+  openWhatsAppWithMessage,
+  generateContributionReminderMessage,
+} from '../utils/whatsapp';
+import {
   Coins,
   Plus,
   Trash2,
@@ -25,6 +29,9 @@ import {
   Tag,
   Target,
   HeartHandshake,
+  Send,
+  MessageCircle,
+  Check,
 } from 'lucide-react';
 
 interface ContributionsViewProps {
@@ -43,6 +50,7 @@ export const ContributionsView: React.FC<ContributionsViewProps> = ({
   onOpenRecordPayment,
 }) => {
   const {
+    currentOrg,
     currentOrgContributions,
     currentOrgMembers,
     currentOrgPayments,
@@ -58,6 +66,43 @@ export const ContributionsView: React.FC<ContributionsViewProps> = ({
   const [rosterFilter, setRosterFilter] = useState<'all' | 'applicable'>('applicable');
   const [rosterSearch, setRosterSearch] = useState('');
   const [notice, setNotice] = useState<string | null>(null);
+  const [remindedMemberId, setRemindedMemberId] = useState<string | null>(null);
+
+  const handleSendReminder = (
+    member: Member,
+    contribution: Contribution,
+    st: { expected: number; paid: number; outstanding: number }
+  ) => {
+    const bank = currentOrg?.bankAccounts?.[0];
+    const message = generateContributionReminderMessage({
+      orgName: currentOrg?.name || 'Organization',
+      orgMotto: currentOrg?.motto,
+      memberName: member.fullName,
+      memberNumber: member.memberNumber,
+      contributionName: contribution.name,
+      contributionType: contribution.type,
+      expectedAmount: st.expected,
+      paidAmount: st.paid,
+      outstandingAmount: st.outstanding,
+      dueDate: contribution.dueDate ? formatDate(contribution.dueDate) : undefined,
+      currencySymbol: currentOrg?.currencySymbol || '₦',
+      bankAccountDetails: bank
+        ? {
+            bankName: bank.bankName,
+            accountNumber: bank.accountNumber,
+            accountName: bank.accountName,
+          }
+        : undefined,
+    });
+
+    openWhatsAppWithMessage(message, member.phone);
+    setRemindedMemberId(member.id);
+    setNotice(`WhatsApp reminder prepared and sent to ${member.fullName}!`);
+    setTimeout(() => {
+      setRemindedMemberId(null);
+      setNotice(null);
+    }, 4000);
+  };
 
   // Form State
   const [name, setName] = useState('');
@@ -910,6 +955,21 @@ export const ContributionsView: React.FC<ContributionsViewProps> = ({
               </div>
             </div>
 
+            {notice && (
+              <div className="mx-4 mt-3 p-2.5 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-lg text-xs flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span>{notice}</span>
+                </div>
+                <button
+                  onClick={() => setNotice(null)}
+                  className="text-emerald-600 hover:text-emerald-900"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
+
             <div className="p-4 overflow-y-auto flex-1">
               <table className="w-full text-left text-xs">
                 <thead className="bg-slate-100 text-slate-700 font-semibold border-b border-slate-200 sticky top-0">
@@ -919,7 +979,7 @@ export const ContributionsView: React.FC<ContributionsViewProps> = ({
                     <th className="py-2 px-3 text-right">Paid</th>
                     <th className="py-2 px-3 text-right">Balance</th>
                     <th className="py-2 px-3 text-center">Status</th>
-                    {canMutate && <th className="py-2 px-3 text-right">Action</th>}
+                    <th className="py-2 px-3 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -945,6 +1005,7 @@ export const ContributionsView: React.FC<ContributionsViewProps> = ({
                         currentOrgPayments
                       );
                       const isApplicable = isObligationApplicableToMember(selectedContribution, member);
+                      const isReminded = remindedMemberId === member.id;
 
                       return (
                         <tr key={member.id} className="hover:bg-slate-50">
@@ -959,6 +1020,7 @@ export const ContributionsView: React.FC<ContributionsViewProps> = ({
                             </div>
                             <div className="text-[10px] font-mono text-slate-400">
                               {member.memberNumber} • {member.category}
+                              {member.phone && <span className="ml-1 text-slate-400">({member.phone})</span>}
                             </div>
                           </td>
                           <td className="py-2.5 px-3 text-right font-mono text-slate-600">
@@ -995,31 +1057,60 @@ export const ContributionsView: React.FC<ContributionsViewProps> = ({
                               {st.status.toUpperCase()}
                             </span>
                           </td>
-                          {canMutate && (
-                            <td className="py-2.5 px-3 text-right">
-                              {st.outstanding > 0 ? (
+                          <td className="py-2.5 px-3 text-right">
+                            <div className="flex items-center justify-end space-x-2">
+                              {st.outstanding > 0 && (
                                 <button
-                                  onClick={() => {
-                                    setSelectedContribution(null);
-                                    onOpenRecordPayment(member.id);
-                                  }}
-                                  className="text-emerald-700 hover:text-emerald-900 font-semibold text-[11px]"
+                                  type="button"
+                                  onClick={() => handleSendReminder(member, selectedContribution, st)}
+                                  title={`Send pre-formatted WhatsApp reminder to ${member.fullName}`}
+                                  className={`flex items-center space-x-1 px-2 py-1 rounded text-[11px] font-semibold border transition cursor-pointer ${
+                                    isReminded
+                                      ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
+                                      : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200'
+                                  }`}
                                 >
-                                  Record Pay
-                                </button>
-                              ) : (
-                                <button
-                                  onClick={() => {
-                                    setSelectedContribution(null);
-                                    onOpenRecordPayment(member.id);
-                                  }}
-                                  className="text-slate-400 hover:text-slate-700 font-medium text-[10px]"
-                                >
-                                  + Payment
+                                  {isReminded ? (
+                                    <>
+                                      <Check className="w-3 h-3 text-emerald-700" />
+                                      <span>Reminded</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <MessageCircle className="w-3 h-3 text-emerald-600" />
+                                      <span>Remind</span>
+                                    </>
+                                  )}
                                 </button>
                               )}
-                            </td>
-                          )}
+
+                              {canMutate && (
+                                <>
+                                  {st.outstanding > 0 ? (
+                                    <button
+                                      onClick={() => {
+                                        setSelectedContribution(null);
+                                        onOpenRecordPayment(member.id);
+                                      }}
+                                      className="text-emerald-700 hover:text-emerald-900 font-semibold text-[11px] px-1.5 py-0.5 rounded hover:bg-emerald-50"
+                                    >
+                                      Record Pay
+                                    </button>
+                                  ) : (
+                                    <button
+                                      onClick={() => {
+                                        setSelectedContribution(null);
+                                        onOpenRecordPayment(member.id);
+                                      }}
+                                      className="text-slate-400 hover:text-slate-700 font-medium text-[10px] px-1.5 py-0.5 rounded hover:bg-slate-100"
+                                    >
+                                      + Payment
+                                    </button>
+                                  )}
+                                </>
+                              )}
+                            </div>
+                          </td>
                         </tr>
                       );
                     })}

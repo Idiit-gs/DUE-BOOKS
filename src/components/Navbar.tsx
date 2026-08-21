@@ -83,13 +83,29 @@ export const Navbar: React.FC<NavbarProps> = ({
               <button
                 id="org-selector-btn"
                 onClick={() => setOrgDropdownOpen(!orgDropdownOpen)}
-                className="flex items-center space-x-2 bg-slate-800/90 hover:bg-slate-700/90 text-slate-200 px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium border border-slate-700 transition"
+                className="flex items-center space-x-2 bg-slate-800/90 hover:bg-slate-700/90 text-slate-200 px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium border border-slate-700 transition cursor-pointer"
               >
-                <Building2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                <span className="max-w-[130px] sm:max-w-[200px] truncate font-semibold">
-                  {currentOrg?.name || 'Select Organization'}
-                </span>
-                <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                {currentOrg?.branding?.logoUrl && currentOrg?.branding?.showLogoOnNavbar !== false ? (
+                  <img
+                    src={currentOrg.branding.logoUrl}
+                    alt={currentOrg.name}
+                    className="w-5 h-5 rounded object-contain bg-white/10 shrink-0"
+                    referrerPolicy="no-referrer"
+                  />
+                ) : (
+                  <Building2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                )}
+                <div className="text-left max-w-[130px] sm:max-w-[200px] truncate">
+                  <span className="font-semibold block truncate leading-tight">
+                    {currentOrg?.name || 'Select Organization'}
+                  </span>
+                  {currentOrg?.motto && (
+                    <span className="hidden md:block text-[9px] text-slate-400 italic truncate leading-none">
+                      {currentOrg.motto}
+                    </span>
+                  )}
+                </div>
+                <ChevronDown className="w-3.5 h-3.5 text-slate-400 shrink-0" />
               </button>
 
               {orgDropdownOpen && (
@@ -104,16 +120,30 @@ export const Navbar: React.FC<NavbarProps> = ({
                         setCurrentOrgId(org.id);
                         setOrgDropdownOpen(false);
                       }}
-                      className={`w-full text-left px-3 py-2 text-xs flex items-start space-x-2 transition ${
+                      className={`w-full text-left px-3 py-2 text-xs flex items-start space-x-2 transition cursor-pointer ${
                         org.id === currentOrg?.id
                           ? 'bg-emerald-950/60 text-emerald-300 border-l-2 border-emerald-400'
                           : 'text-slate-200 hover:bg-slate-700/70'
                       }`}
                     >
-                      <Building2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                      <div>
-                        <div className="font-semibold">{org.name}</div>
-                        <div className="text-[10px] text-slate-400 capitalize">
+                      {org.branding?.logoUrl ? (
+                        <img
+                          src={org.branding.logoUrl}
+                          alt={org.name}
+                          className="w-5 h-5 rounded object-contain bg-white/10 shrink-0 mt-0.5"
+                          referrerPolicy="no-referrer"
+                        />
+                      ) : (
+                        <Building2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <div className="font-semibold truncate">{org.name}</div>
+                        {org.motto && (
+                          <div className="text-[10px] text-slate-400 italic truncate">
+                            &ldquo;{org.motto}&rdquo;
+                          </div>
+                        )}
+                        <div className="text-[10px] text-slate-500 capitalize">
                           {org.type} • {org.code}
                         </div>
                       </div>
@@ -125,7 +155,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                       setOrgDropdownOpen(false);
                       onOpenNewOrg?.();
                     }}
-                    className="w-full text-left px-3 py-2 text-xs text-emerald-400 hover:bg-slate-700/70 flex items-center space-x-2 font-medium"
+                    className="w-full text-left px-3 py-2 text-xs text-emerald-400 hover:bg-slate-700/70 flex items-center space-x-2 font-medium cursor-pointer"
                   >
                     <Plus className="w-4 h-4" />
                     <span>Start New Organization</span>

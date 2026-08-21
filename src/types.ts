@@ -1,4 +1,4 @@
-export type Role = 'admin' | 'treasurer' | 'viewer';
+export type Role = 'admin' | 'treasurer' | 'financial_sec' | 'auditor' | 'secretary' | 'viewer';
 export type UserRole = Role;
 
 export interface User {
@@ -181,6 +181,8 @@ export interface AuditEvent {
   actorRole: Role;
   action:
     | 'ORGANIZATION_CREATED'
+    | 'ORGANIZATION_UPDATED'
+    | 'ORGANIZATION_DELETED'
     | 'ORGANIZATION_DATA_PURGED'
     | 'MEMBER_CREATED'
     | 'MEMBER_UPDATED'

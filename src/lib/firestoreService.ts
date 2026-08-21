@@ -167,6 +167,34 @@ export async function saveAuditEventDoc(event: AuditEvent) {
  * for a specific organization in Firestore while leaving the Organization metadata,
  * User profiles, and Org Memberships / Officer roles 100% intact.
  */
+export async function deleteOrganizationDoc(orgId: string): Promise<{ success: boolean; error?: string }> {
+  try {
+    // 1. Delete all sub-records (members, contributions, payments, expenses, audit events)
+    await clearOrgFirestoreCollections(orgId);
+
+    // 2. Delete all memberships associated with this org
+    const mshipRef = collection(db, 'org_memberships');
+    const qMship = query(mshipRef, where('orgId', '==', orgId));
+    const snapMship = await getDocs(qMship);
+    if (!snapMship.empty) {
+      let batch = writeBatch(db);
+      for (const d of snapMship.docs) {
+        batch.delete(d.ref);
+      }
+      await batch.commit();
+    }
+
+    // 3. Delete the organization doc itself
+    const orgRef = doc(db, 'organizations', orgId);
+    await deleteDoc(orgRef);
+
+    return { success: true };
+  } catch (err: any) {
+    console.error('Error in deleteOrganizationDoc:', err);
+    return { success: false, error: err?.message || 'Failed to delete organization from Firestore.' };
+  }
+}
+
 export async function clearOrgFirestoreCollections(orgId: string): Promise<{ success: boolean; count: number; error?: string }> {
   if (!orgId) {
     return { success: false, count: 0, error: 'No organization ID provided.' };

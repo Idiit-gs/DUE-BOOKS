@@ -5,6 +5,7 @@ import { formatNaira, formatDate, formatDateTime } from '../utils/formatters';
 import { calcOutstanding, getMemberContributionStatus } from '../utils/financial';
 import { printDocumentElement } from '../utils/printUtility';
 import { openWhatsAppWithMessage } from '../utils/whatsapp';
+import { OfficialLetterhead, DualSignatory } from './OfficialLetterhead';
 import {
   X,
   Printer,
@@ -130,26 +131,15 @@ export const MemberStatementModal: React.FC<MemberStatementModalProps> = ({
 
         {/* Printable Statement Document Body */}
         <div className="p-6 sm:p-8 space-y-6 print:p-0 print:space-y-4 text-slate-900 bg-white" id="printable-statement">
-          {/* Header */}
-          <div className="border-b-2 border-slate-900 pb-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div>
-              <div className="text-xs font-bold uppercase tracking-widest text-emerald-700">
-                Official Financial Statement of Standing
-              </div>
-              <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 mt-0.5">
-                {currentOrg?.name}
-              </h1>
-              <p className="text-xs text-slate-500 italic mt-0.5">&ldquo;{currentOrg?.motto}&rdquo;</p>
-            </div>
-
-            <div className="text-left sm:text-right text-xs text-slate-500">
-              <div className="font-semibold text-slate-800">
-                Statement Date: {formatDate(new Date().toISOString())}
-              </div>
-              <div>Organization Code: {currentOrg?.code}</div>
-              <div>Verified Digital Record Book v7.0</div>
-            </div>
-          </div>
+          {/* Official Letterhead Header with Logo & Org Details */}
+          <OfficialLetterhead
+            organization={currentOrg}
+            documentType="statement"
+            documentTitle="Official Member Statement of Account"
+            documentNumber={`STMT-${member.memberNumber}`}
+            documentDate={formatDate(new Date().toISOString())}
+            subtitle="Authoritative Member Audit Trail"
+          />
 
           {/* Member Profile Snapshot */}
           <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
@@ -340,22 +330,17 @@ export const MemberStatementModal: React.FC<MemberStatementModalProps> = ({
             </div>
           </div>
 
-          {/* Certification Signature Footer */}
-          <div className="pt-6 border-t border-slate-200 grid grid-cols-2 gap-8 text-xs">
-            <div>
-              <div className="text-[10px] text-slate-400 uppercase font-bold">Issued By Secretariat</div>
-              <div className="mt-4 border-b border-slate-400 w-48"></div>
-              <div className="mt-1 font-semibold text-slate-800">Treasurer / Financial Secretary</div>
-              <div className="text-[10px] text-slate-500">Every naira has a history.</div>
-            </div>
-
-            <div className="text-right">
-              <div className="text-[10px] text-slate-400 uppercase font-bold">Official Seal / Verification</div>
-              <div className="mt-2 inline-block p-2 rounded border border-dashed border-emerald-600 bg-emerald-50 text-[10px] text-emerald-800 font-mono">
-                DUES-BOOK-SEC-V7-{member.id.toUpperCase().substring(0, 10)}
-              </div>
-            </div>
-          </div>
+          {/* Official Dual Signatory Certification with Financial Secretary & Executive Seal */}
+          <DualSignatory
+            organization={currentOrg}
+            primaryOfficerName={currentOrg?.branding?.signatoryName || "Financial Secretary"}
+            primaryOfficerRole={currentOrg?.branding?.signatoryTitle || "Authorized Financial Secretary"}
+            secondaryOfficerName="Treasurer / President"
+            secondaryOfficerRole="Executive General Secretary"
+            dateSigned={formatDate(new Date().toISOString())}
+            authCode={`STMT-${currentOrg?.code || 'DUES'}-${member.memberNumber}`}
+            notes="Official financial standing certified by the Secretariat. All entries verified against ledger entries."
+          />
         </div>
       </div>
     </div>

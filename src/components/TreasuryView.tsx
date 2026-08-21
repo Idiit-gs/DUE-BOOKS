@@ -3,6 +3,7 @@ import { useDuesBook } from '../context/DuesBookContext';
 import { Expense, ExpenseCategory, BankAccount, Custodian } from '../types';
 import { formatNaira, formatDate } from '../utils/formatters';
 import { calcTotalConfirmedInflow, calcTotalExpenses } from '../utils/financial';
+import { ExpenseVoucherModal } from './ExpenseVoucherModal';
 import {
   Landmark,
   Wallet,
@@ -17,6 +18,8 @@ import {
   Search,
   Filter,
   DollarSign,
+  FileText,
+  Printer,
 } from 'lucide-react';
 
 interface TreasuryViewProps {
@@ -37,6 +40,7 @@ export const TreasuryView: React.FC<TreasuryViewProps> = ({ onOpenAddExpense }) 
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [selectedExpenseForVoucher, setSelectedExpenseForVoucher] = useState<Expense | null>(null);
 
   // Add Bank Account Modal
   const [isAddBankModalOpen, setIsAddBankModalOpen] = useState(false);
@@ -366,17 +370,27 @@ export const TreasuryView: React.FC<TreasuryViewProps> = ({ onOpenAddExpense }) 
                       {formatNaira(exp.amount)}
                     </td>
                     <td className="py-3 px-3 text-slate-500">{exp.approvedBy}</td>
-                    {canMutate && (
-                      <td className="py-3 px-4 text-right">
+                    <td className="py-3 px-4 text-right">
+                      <div className="flex items-center justify-end space-x-1">
                         <button
-                          onClick={() => deleteExpense(exp.id)}
-                          className="p-1 text-slate-400 hover:text-rose-600 rounded transition cursor-pointer"
-                          title="Delete Expense Entry"
+                          onClick={() => setSelectedExpenseForVoucher(exp)}
+                          className="flex items-center space-x-1 text-slate-600 hover:text-emerald-700 bg-slate-100 hover:bg-emerald-50 px-2 py-1 rounded text-[11px] font-semibold transition cursor-pointer border border-slate-200 hover:border-emerald-200"
+                          title="Print / View Official Payment Voucher"
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <Printer className="w-3 h-3 text-emerald-600" />
+                          <span>Voucher</span>
                         </button>
-                      </td>
-                    )}
+                        {canMutate && (
+                          <button
+                            onClick={() => deleteExpense(exp.id)}
+                            className="p-1 text-slate-400 hover:text-rose-600 rounded transition cursor-pointer"
+                            title="Delete Expense Entry"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
+                    </td>
                   </tr>
                 ))
               )}
@@ -535,6 +549,14 @@ export const TreasuryView: React.FC<TreasuryViewProps> = ({ onOpenAddExpense }) 
             </form>
           </div>
         </div>
+      )}
+
+      {/* Expense Payment Voucher Modal */}
+      {selectedExpenseForVoucher && (
+        <ExpenseVoucherModal
+          expense={selectedExpenseForVoucher}
+          onClose={() => setSelectedExpenseForVoucher(null)}
+        />
       )}
     </div>
   );

@@ -9,6 +9,7 @@ import {
 } from '../utils/formatters';
 import { printDocumentElement } from '../utils/printUtility';
 import { openWhatsAppWithMessage } from '../utils/whatsapp';
+import { OfficialLetterhead, OfficialSignatory } from './OfficialLetterhead';
 import {
   X,
   Printer,
@@ -173,24 +174,15 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
             </div>
           )}
 
-          {/* Header */}
-          <div className="border-b-2 border-slate-900 pb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div>
-              <div className="text-[11px] font-bold uppercase tracking-widest text-emerald-700">
-                Official Digital Receipt of Payment
-              </div>
-              <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 mt-0.5">
-                {currentOrg?.name}
-              </h1>
-              <p className="text-xs text-slate-500 italic mt-0.5">&ldquo;{currentOrg?.motto}&rdquo;</p>
-            </div>
-
-            <div className="text-left sm:text-right text-xs">
-              <div className="font-mono text-sm font-bold text-slate-900">{payment.receiptNumber}</div>
-              <div className="text-slate-500 font-medium">Date: {formatDate(payment.paymentDate)}</div>
-              <div className="text-[11px] text-slate-400">Org Code: {currentOrg?.code}</div>
-            </div>
-          </div>
+          {/* Official Letterhead Header with Logo & Org Details */}
+          <OfficialLetterhead
+            organization={currentOrg}
+            documentType="receipt"
+            documentTitle="Official Digital Receipt of Payment"
+            documentNumber={payment.receiptNumber}
+            documentDate={formatDate(payment.paymentDate)}
+            subtitle="Verified Treasury Voucher"
+          />
 
           {/* Member & Transaction Meta */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200 text-xs">
@@ -332,19 +324,22 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
             </div>
           </div>
 
-          {/* Traceable Footer */}
-          <div className="pt-4 border-t border-slate-200 grid grid-cols-2 gap-4 text-xs">
-            <div>
-              <div className="text-[10px] text-slate-400 uppercase font-bold">Recorded By</div>
-              <div className="font-semibold text-slate-800 mt-1">{payment.recordedByName}</div>
-              <div className="text-[11px] text-slate-500">{formatDateTime(payment.recordedAt)}</div>
-            </div>
+          {/* Official Signatory Block signed by Financial Secretary */}
+          <OfficialSignatory
+            organization={currentOrg}
+            officerName={currentOrg?.branding?.signatoryName || "Financial Secretary"}
+            officerRole={currentOrg?.branding?.signatoryTitle || "Authorized Financial Secretary"}
+            dateSigned={formatDate(payment.paymentDate)}
+            notes={`Official financial instrument issued by ${currentOrg?.name}. Payment recorded by ${payment.recordedByName} on ${formatDateTime(payment.recordedAt)}.`}
+          />
 
-            <div className="text-right">
-              <div className="text-[10px] text-slate-400 uppercase font-bold">Authentication Record</div>
-              <div className="inline-block p-1.5 rounded border border-dashed border-emerald-600 bg-emerald-50 text-[10px] text-emerald-800 font-mono mt-1">
-                AUTH-ID-{payment.id.toUpperCase().substring(0, 12)}
-              </div>
+          {/* Traceable Authentication Record Bar */}
+          <div className="pt-2 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-[10px] text-slate-400 font-mono">
+            <div>
+              Recorded by: <span className="font-semibold text-slate-700">{payment.recordedByName}</span> ({formatDateTime(payment.recordedAt)})
+            </div>
+            <div className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded border border-slate-200">
+              AUTH-SIG: {payment.id.toUpperCase().substring(0, 14)}
             </div>
           </div>
         </div>

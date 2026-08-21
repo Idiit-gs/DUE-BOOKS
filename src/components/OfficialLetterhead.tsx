@@ -32,10 +32,10 @@ export const OfficialLetterhead: React.FC<OfficialLetterheadProps> = ({
   const phone = branding.contactPhone;
   const email = branding.contactEmail;
   const website = branding.website;
-  const logoUrl = branding.logoUrl;
+  const logoUrl = branding.logoUrl || organization?.branding?.logoUrl;
 
   return (
-    <header
+    <div
       className={`border-b-2 border-slate-900 pb-5 space-y-3 print:pb-4 ${className}`}
       id="official-letterhead-header"
     >
@@ -44,7 +44,7 @@ export const OfficialLetterhead: React.FC<OfficialLetterheadProps> = ({
         <div className="flex items-start space-x-4">
           {/* Logo or Fallback Badge */}
           {logoUrl ? (
-            <div className="w-16 h-16 sm:w-20 sm:h-20 shrink-0 rounded-xl overflow-hidden border border-slate-200 shadow-xs bg-white flex items-center justify-center p-1">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 shrink-0 rounded-xl overflow-hidden border border-slate-200 shadow-xs bg-white flex items-center justify-center p-1.5">
               <img
                 src={logoUrl}
                 alt={`${orgName} Logo`}
@@ -147,7 +147,7 @@ export const OfficialLetterhead: React.FC<OfficialLetterheadProps> = ({
           )}
         </div>
       )}
-    </header>
+    </div>
   );
 };
 
@@ -171,13 +171,13 @@ export const OfficialSignatory: React.FC<OfficialSignatoryProps> = ({
   const branding = getOrgBranding(organization);
   const primaryColor = branding.primaryColor || '#059669';
 
-  const defaultSignatoryName = branding.signatoryName || officerName || 'Executive Financial Secretary';
-  const defaultSignatoryTitle = branding.signatoryTitle || officerRole || 'Authorized Signatory';
+  const defaultSignatoryName = branding.signatoryName || officerName || 'Financial Secretary';
+  const defaultSignatoryTitle = branding.signatoryTitle || officerRole || 'Authorized Financial Secretary';
   const signatureUrl = branding.signatureUrl;
   const footerNote = branding.letterheadFooter || notes || 'Official financial instrument. Every naira has a verified audit history.';
 
   return (
-    <div className={`pt-5 mt-6 border-t border-slate-200 space-y-4 ${className}`} id="official-signatory-block">
+    <div className={`pt-5 mt-6 border-t border-slate-200 space-y-4 break-inside-avoid ${className}`} id="official-signatory-block">
       <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-6">
         {/* Terms & Legal Disclaimer */}
         <div className="text-[11px] text-slate-500 max-w-sm space-y-1">
@@ -203,7 +203,7 @@ export const OfficialSignatory: React.FC<OfficialSignatoryProps> = ({
             </div>
           ) : (
             <div className="h-10 border-b border-slate-400 border-dashed w-44 ml-auto mb-1 flex items-end justify-center">
-              <span className="text-[10px] font-serif italic text-slate-400">Authorized Officer Seal</span>
+              <span className="text-[10px] font-serif italic text-slate-400">Authorized Signature & Seal</span>
             </div>
           )}
 
@@ -212,6 +212,81 @@ export const OfficialSignatory: React.FC<OfficialSignatoryProps> = ({
             {defaultSignatoryTitle}
           </div>
           {dateSigned && <div className="text-[10px] text-slate-400">Signed: {dateSigned}</div>}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+interface DualSignatoryProps {
+  organization?: Organization | null;
+  primaryOfficerName?: string;
+  primaryOfficerRole?: string;
+  secondaryOfficerName?: string;
+  secondaryOfficerRole?: string;
+  dateSigned?: string;
+  authCode?: string;
+  notes?: string;
+  className?: string;
+}
+
+export const DualSignatory: React.FC<DualSignatoryProps> = ({
+  organization,
+  primaryOfficerName,
+  primaryOfficerRole = 'Financial Secretary',
+  secondaryOfficerName,
+  secondaryOfficerRole = 'Treasurer / President',
+  dateSigned,
+  authCode,
+  notes,
+  className = '',
+}) => {
+  const branding = getOrgBranding(organization);
+  const primaryColor = branding.primaryColor || '#059669';
+
+  const finSecName = branding.signatoryName || primaryOfficerName || 'Financial Secretary';
+  const finSecTitle = branding.signatoryTitle || primaryOfficerRole;
+  const secondName = secondaryOfficerName || 'Treasurer / President';
+  const footerNote = branding.letterheadFooter || notes || 'Certified true executive financial record. Protected by Dues Book cryptographic audit trail.';
+
+  return (
+    <div className={`pt-5 mt-6 border-t-2 border-slate-900 space-y-4 break-inside-avoid ${className}`} id="dual-signatory-block">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 items-end">
+        {/* Officer 1: Financial Secretary */}
+        <div className="space-y-1 text-left">
+          <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Certified & Prepared By:</div>
+          <div className="h-10 border-b border-slate-400 border-dashed w-48 mb-1.5 flex items-end">
+            <span className="text-[9px] font-serif italic text-slate-400">Financial Secretary Seal</span>
+          </div>
+          <div className="font-bold text-slate-900 text-xs">{finSecName}</div>
+          <div className="text-[10px] font-semibold uppercase tracking-wider text-emerald-700">
+            {finSecTitle}
+          </div>
+          {dateSigned && <div className="text-[10px] text-slate-400">Date: {dateSigned}</div>}
+        </div>
+
+        {/* Middle: Verification Auth Stamp */}
+        <div className="text-center space-y-1">
+          <div className="inline-block p-2 rounded-lg border border-dashed border-emerald-600 bg-emerald-50 text-[10px] text-emerald-900 font-mono text-center">
+            <div className="font-bold uppercase text-[9px] text-emerald-800">Official Executive Verification</div>
+            <div className="tracking-wider font-semibold">{authCode || `SEC-${organization?.code || 'DUES'}-${Date.now().toString().slice(-6)}`}</div>
+          </div>
+          <p className="text-[9px] text-slate-400 italic text-center max-w-[220px] mx-auto pt-1">
+            {footerNote}
+          </p>
+        </div>
+
+        {/* Officer 2: Treasurer / President */}
+        <div className="space-y-1 text-left sm:text-right">
+          <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Approved & Authorized By:</div>
+          <div className="h-10 border-b border-slate-400 border-dashed w-48 sm:ml-auto mb-1.5 flex items-end justify-start sm:justify-end">
+            <span className="text-[9px] font-serif italic text-slate-400">Executive Officer Seal</span>
+          </div>
+          <div className="font-bold text-slate-900 text-xs">{secondName}</div>
+          <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-700">
+            {secondaryOfficerRole}
+          </div>
+          {dateSigned && <div className="text-[10px] text-slate-400">Date: {dateSigned}</div>}
         </div>
       </div>
     </div>

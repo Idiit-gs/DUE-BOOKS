@@ -92,3 +92,69 @@ export function openWhatsAppWithMessage(text: string, rawPhone?: string): void {
   }
 }
 
+export interface ContributionReminderParams {
+  orgName: string;
+  orgMotto?: string;
+  memberName: string;
+  memberNumber: string;
+  contributionName: string;
+  contributionType: string;
+  expectedAmount: number;
+  paidAmount: number;
+  outstandingAmount: number;
+  dueDate?: string;
+  currencySymbol?: string;
+  bankAccountDetails?: {
+    bankName: string;
+    accountNumber: string;
+    accountName: string;
+  };
+}
+
+/**
+ * Generates an official, polite, and clear WhatsApp payment reminder message
+ * formatted for Nigerian groups, associations, and clubs.
+ */
+export function generateContributionReminderMessage(params: ContributionReminderParams): string {
+  const symbol = params.currencySymbol || '₦';
+  const lines: string[] = [];
+
+  lines.push(`🔔 *PAYMENT REMINDER*`);
+  lines.push(`🏛️ *${params.orgName.toUpperCase()}*`);
+  if (params.orgMotto) {
+    lines.push(`_"${params.orgMotto}"_`);
+  }
+  lines.push(``);
+  lines.push(`Dear *${params.memberName}* (${params.memberNumber}),`);
+  lines.push(
+    `This is a cordial reminder from the Secretariat regarding your obligation for *${params.contributionName}* (${params.contributionType.toUpperCase()}).`
+  );
+  lines.push(``);
+  lines.push(`📊 *Obligation Breakdown:*`);
+  lines.push(`• Assigned Expected: *${symbol}${params.expectedAmount.toLocaleString()}*`);
+  lines.push(`• Amount Paid: ${symbol}${params.paidAmount.toLocaleString()}`);
+  lines.push(`• Outstanding Balance: *${symbol}${params.outstandingAmount.toLocaleString()}*`);
+
+  if (params.dueDate) {
+    lines.push(`• Due Date: ${params.dueDate}`);
+  }
+
+  if (params.bankAccountDetails && params.bankAccountDetails.accountNumber) {
+    lines.push(``);
+    lines.push(`🏦 *Designated Bank Account:*`);
+    lines.push(`• Bank: *${params.bankAccountDetails.bankName}*`);
+    lines.push(`• Account No: *${params.bankAccountDetails.accountNumber}*`);
+    lines.push(`• Account Name: ${params.bankAccountDetails.accountName}`);
+  }
+
+  lines.push(``);
+  lines.push(
+    `Kindly make payment at your earliest convenience to maintain your active good standing and support ongoing organizational projects.`
+  );
+  lines.push(``);
+  lines.push(`Thank you for your dedication and cooperation.`);
+  lines.push(`_Treasury & Secretariat, ${params.orgName}_`);
+
+  return lines.join('\n');
+}
+

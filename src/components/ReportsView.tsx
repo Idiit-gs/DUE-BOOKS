@@ -11,6 +11,7 @@ import {
   calcContributionReceived,
 } from '../utils/financial';
 import { printDocumentElement } from '../utils/printUtility';
+import { OfficialLetterhead, DualSignatory } from './OfficialLetterhead';
 import {
   FileSpreadsheet,
   Printer,
@@ -208,31 +209,23 @@ export const ReportsView: React.FC = () => {
 
       {/* Printable Report Canvas */}
       <div id="printable-report" className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-xs space-y-6 print:border-none print:shadow-none print:p-0">
-        {/* Printable Executive Letterhead */}
-        <div className="border-b-2 border-slate-900 pb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div>
-            <div className="text-[11px] font-bold uppercase tracking-widest text-emerald-700">
-              Executive Financial Statement
-            </div>
-            <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 mt-0.5">
-              {currentOrg?.name}
-            </h1>
-            <p className="text-xs text-slate-500 italic mt-0.5">&ldquo;{currentOrg?.motto}&rdquo;</p>
-          </div>
-
-          <div className="text-left sm:text-right text-xs">
-            <div className="font-bold text-slate-900 uppercase">
-              {activeReportTab === 'obligations' && 'Dues & Levies Collection Schedule'}
-              {activeReportTab === 'defaulters' && 'Outstanding Arrears & Defaulters List'}
-              {activeReportTab === 'income_expense' && 'Statement of Income & Expenditure'}
-              {activeReportTab === 'member_roster' && 'Master Member Standing Ledger'}
-            </div>
-            <div className="text-slate-500">
-              As of: {formatDate(new Date().toISOString().split('T')[0])}
-            </div>
-            <div className="text-[11px] text-slate-400">Version 7.0 Authoritative Record</div>
-          </div>
-        </div>
+        {/* Official Executive Letterhead with Org Logo & Metadata */}
+        <OfficialLetterhead
+          organization={currentOrg}
+          documentType="report"
+          documentTitle="Executive Financial Report"
+          documentNumber={`RPT-${currentOrg?.code || 'DUES'}-${activeReportTab.toUpperCase().substring(0, 4)}`}
+          documentDate={formatDate(new Date().toISOString().split('T')[0])}
+          subtitle={
+            activeReportTab === 'obligations'
+              ? 'Dues & Levies Collection Schedule'
+              : activeReportTab === 'defaulters'
+              ? 'Outstanding Arrears & Defaulters List'
+              : activeReportTab === 'income_expense'
+              ? 'Statement of Income & Expenditure'
+              : 'Master Member Standing Ledger'
+          }
+        />
 
         {/* 1. Obligations & Levies Report Tab */}
         {activeReportTab === 'obligations' && (
@@ -506,20 +499,17 @@ export const ReportsView: React.FC = () => {
           </div>
         )}
 
-        {/* Authentication Signature Stamp */}
-        <div className="pt-6 border-t border-slate-200 grid grid-cols-2 gap-4 text-xs">
-          <div>
-            <div className="text-[10px] text-slate-400 uppercase font-bold">Certified Correct By:</div>
-            <div className="font-semibold text-slate-900 mt-3">_______________________________</div>
-            <div className="text-[11px] text-slate-500">Treasurer / Financial Secretary</div>
-          </div>
-
-          <div className="text-right">
-            <div className="text-[10px] text-slate-400 uppercase font-bold">Approved By:</div>
-            <div className="font-semibold text-slate-900 mt-3">_______________________________</div>
-            <div className="text-[11px] text-slate-500">President / General Secretary</div>
-          </div>
-        </div>
+        {/* Dual Executive Certification Signature Block */}
+        <DualSignatory
+          organization={currentOrg}
+          primaryOfficerName={currentOrg?.branding?.signatoryName || "Financial Secretary"}
+          primaryOfficerRole={currentOrg?.branding?.signatoryTitle || "Authorized Financial Secretary"}
+          secondaryOfficerName="Treasurer / President"
+          secondaryOfficerRole="Executive Auditor & President"
+          dateSigned={formatDate(new Date().toISOString().split('T')[0])}
+          authCode={`AUDIT-${currentOrg?.code || 'DUES'}-${activeReportTab.toUpperCase().substring(0, 4)}`}
+          notes="Authoritative executive statement generated from immutable cloud ledger. All balances certified accurate."
+        />
       </div>
     </div>
   );

@@ -50,6 +50,7 @@ import {
   saveExpenseDoc,
   deleteExpenseDoc,
   saveAuditEventDoc,
+  deleteOrganizationDoc,
   clearOrgFirestoreCollections,
 } from '../lib/firestoreService';
 
@@ -85,6 +86,7 @@ interface DuesBookContextType {
     code?: string;
   }) => Organization;
   updateOrganization: (id: string, data: Partial<Organization>) => void;
+  deleteOrganization: (id: string) => Promise<{ success: boolean; message: string }>;
   updateOrgBranding: (branding: Partial<OrgBranding>) => void;
   addBankAccount: (bank: Omit<BankAccount, 'id'>) => void;
   addCustodian: (custodian: Omit<Custodian, 'id'>) => void;
@@ -95,6 +97,7 @@ interface DuesBookContextType {
   memberships: OrgMembership[];
   currentOrgMemberships: OrgMembership[];
   addOfficer: (data: { userEmail: string; userName: string; role: Role }) => { success: boolean; message: string };
+  elevateMemberToOfficer: (memberId: string, role: Role, customEmail?: string) => { success: boolean; message: string };
   updateOfficerRole: (membershipId: string, newRole: Role) => { success: boolean; message: string };
   removeOfficer: (membershipId: string) => { success: boolean; message: string };
 
@@ -423,7 +426,10 @@ export const DuesBookProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   }, [currentOrgMemberships, currentUser?.email]);
 
   const effectiveRole: Role = simulatedRole || currentRole;
-  const canMutate = effectiveRole === 'admin' || effectiveRole === 'treasurer';
+  const canMutate =
+    effectiveRole === 'admin' ||
+    effectiveRole === 'treasurer' ||
+    effectiveRole === 'financial_sec';
   const canManageOfficers = effectiveRole === 'admin';
 
   // Check if a new user has no organizations
@@ -590,11 +596,86 @@ export const DuesBookProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     });
 
     logAudit({
-      action: 'ORGANIZATION_CREATED',
+      action: 'ORGANIZATION_UPDATED',
       entityType: 'organization',
       entityId: id,
       summary: `Updated organization details for ${data.name || 'organization'}.`,
     });
+  };
+
+  const updateOrgBranding = (branding: Partial<OrgBranding>) => {
+    if (!canManageOfficers) return;
+    setOrganizations((prev) => {
+      const updated = prev.map((o) =>
+        o.id === currentOrgId
+          ? {
+              ...o,
+              branding: {
+                ...(o.branding || {}),
+                ...branding,
+              },
+            }
+          : o
+      );
+      const target = updated.find((o) => o.id === currentOrgId);
+      if (target) saveOrganizationDoc(target);
+      return updated;
+    });
+
+    logAudit({
+      action: 'ORGANIZATION_UPDATED',
+      entityType: 'organization',
+      entityId: currentOrgId,
+      summary: `Updated branding configuration (logo/motto/headers) for ${currentOrg?.name || 'organization'}.`,
+      payload: branding,
+    });
+  };
+
+  const deleteOrganization = async (id: string): Promise<{ success: boolean; message: string }> => {
+    if (effectiveRole !== 'admin') {
+      return { success: false, message: 'Permission denied: Only an Administrator can delete an organization.' };
+    }
+
+    const targetOrg = organizations.find((o) => o.id === id);
+    if (!targetOrg) {
+      return { success: false, message: 'Organization not found.' };
+    }
+
+    setSyncStatus('syncing');
+
+    try {
+      // 1. Delete from Firestore (all subcollections and org doc)
+      await deleteOrganizationDoc(id);
+
+      // 2. Remove all related state
+      const remainingOrgs = organizations.filter((o) => o.id !== id);
+      setOrganizations(remainingOrgs);
+      setMembers((prev) => prev.filter((m) => m.orgId !== id));
+      setContributions((prev) => prev.filter((c) => c.orgId !== id));
+      setPayments((prev) => prev.filter((p) => p.orgId !== id));
+      setExpenses((prev) => prev.filter((e) => e.orgId !== id));
+      setMemberships((prev) => prev.filter((m) => m.orgId !== id));
+      setAuditEvents((prev) => prev.filter((a) => a.orgId !== id));
+
+      // 3. Switch active org to first remaining, or empty if none
+      const nextOrgId = remainingOrgs.length > 0 ? remainingOrgs[0].id : '';
+      setCurrentOrgIdState(nextOrgId);
+      if (currentUser && nextOrgId) {
+        saveUserDoc(currentUser, nextOrgId);
+      }
+
+      setSyncStatus('synced');
+      return {
+        success: true,
+        message: `Organization "${targetOrg.name}" and all associated data deleted successfully.`,
+      };
+    } catch (err: any) {
+      setSyncStatus('synced');
+      return {
+        success: false,
+        message: err?.message || 'Failed to delete organization.',
+      };
+    }
   };
 
   const addBankAccount = (bank: Omit<BankAccount, 'id'>) => {
@@ -1179,6 +1260,35 @@ export const DuesBookProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     return { success: true, message: `Added ${newMembership.userName} as ${data.role}.` };
   };
 
+  const elevateMemberToOfficer = (
+    memberId: string,
+    role: Role,
+    customEmail?: string
+  ): { success: boolean; message: string } => {
+    if (!canManageOfficers) {
+      return { success: false, message: 'Permission denied: Only Administrators can appoint officers.' };
+    }
+
+    const member = currentOrgMembers.find((m) => m.id === memberId);
+    if (!member) {
+      return { success: false, message: 'Selected member was not found in directory.' };
+    }
+
+    const email = (customEmail || member.email || '').trim().toLowerCase();
+    if (!email) {
+      return {
+        success: false,
+        message: `Member ${member.fullName} does not have an email on file. Please enter their login email to elevate them.`,
+      };
+    }
+
+    return addOfficer({
+      userName: member.fullName,
+      userEmail: email,
+      role,
+    });
+  };
+
   const updateOfficerRole = (
     membershipId: string,
     newRole: Role
@@ -1361,6 +1471,8 @@ export const DuesBookProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         setCurrentOrgId,
         createOrganization,
         updateOrganization,
+        deleteOrganization,
+        updateOrgBranding,
         addBankAccount,
         addCustodian,
         isNewUserOnboarding,
@@ -1369,6 +1481,7 @@ export const DuesBookProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         memberships,
         currentOrgMemberships,
         addOfficer,
+        elevateMemberToOfficer,
         updateOfficerRole,
         removeOfficer,
 
